@@ -1,0 +1,33 @@
+code {
+  font-weight: bold;
+}
+
+h2 {
+  margin-top: 3rem;
+  padding-top: 1em;
+  border-top: 2px solid blue;
+}
+
+#main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#grid {
+  margin: 10px 0 50px 0;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+}
+
+#grid > div {
+  width: 50px;
+  height: 50px;
+  margin: 5px;
+  background-color: lightcoral;
+}
+
+#instructions {
+  width: 600px;
+}
