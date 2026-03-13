@@ -26,6 +26,9 @@ h2 {
   height: 50px;
   margin: 5px;
   background-color: lightcoral;
+  &.hovered{
+    background-color: blue;
+  }
 }
 
 #instructions {

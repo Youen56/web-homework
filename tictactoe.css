@@ -1,0 +1,30 @@
+#grid {
+  margin: 50px auto; /* Centre la grille et ajoute de l'espace */
+  display: grid;
+  grid-template-columns: repeat(3, 50px); /* Fixe la largeur des colonnes à 50px */
+  grid-template-rows: repeat(3, 50px);    /* Fixe la hauteur des lignes à 50px */
+  gap: 5px;                               /* Ajoute un petit espace entre les cases */
+  width: fit-content;                     /* Empêche la grille de s'étaler sur toute la page */
+}
+
+#grid > div {
+  width: 50px;
+  height: 50px;
+  background-color: #eee;                 /* Un gris clair pour voir les cases vides */
+  border: 1px solid #ccc;                 /* Une bordure pour bien délimiter */
+  cursor: pointer;
+}
+
+#grid > div.player1 {
+  background-color: blue;
+}
+
+#grid > div.player2 {
+  background-color: red;
+}
+
+/* Centre le bouton sous la grille */
+#reset-btn {
+  display: block;
+  margin: 20px auto;
+}
