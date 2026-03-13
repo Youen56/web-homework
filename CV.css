@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+
+:root {
+    --primary-color: #2c3e50;
+    --accent-color: #3498db;
+    --bg-color: #e9ecef;
+    --text-color: #333;
+    --card-bg: #ffffff;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 20px;
+}
+
+
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: var(--card-bg);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.image{
+    width: 150px;
+    height: 220px;
+    border-radius: 15%;
+}
+
+h1 {
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 2.5em;
+}
+
+.contact-info {
+    font-size: 1em;
+    font-weight: 300;
+}
+
+.contact-info a {
+    color: #ecf0f1;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 600;
+}
+
+.contact-info a:hover {
+    color: #f1c40f;
+}
+
+section {
+    padding: 30px 40px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.3s ease;
+}
+
+section:hover {
+    background-color: #f8f9fa;
+}
+
+h2 {
+    color: var(--primary-color);
+    position: relative;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+/* Ligne animée sous les titres de section */
+h2::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--accent-color);
+    transition: width 0.4s ease;
+}
+
+section:hover h2::after {
+    width: 100px;
+}
+
+.item {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-color);
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Effet de survol sur les cartes d'expérience */
+.item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.item-title {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 1.1em;
+}
+
+.item-date {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+ul {
+    margin-top: 10px;
+    padding-left: 20px;
+}
+
+.skills {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* Style et animation des badges de compétences */
+.skill-tag {
+    background-color: #ecf0f1;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.skill-tag:hover {
+    background-color: var(--accent-color);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+}
+
+@media (max-width: 600px) {
+    .item-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .item-date {
+        margin-top: 5px;
+    }
+    section {
+        padding: 20px;
+    }
+}
