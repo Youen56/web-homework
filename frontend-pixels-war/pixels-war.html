@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixels War UE22</title>
+    <link rel="stylesheet" href="pixels-war.css" />
+    <script src="pixels-war.js" defer></script>
+</head>
+
+<body>
+
+    <div id="connect-dialog">
+        <span class="field-group">
+            <label for="mapid-input">Map:</label>
+            <select id="mapid-input" name="mapid">
+            </select>
+        </span>
+        <button type="button" id="connect-button">Display</button>
+    </div>
+
+    <div id="grid">
+    </div>
+
+    <div id="controls">
+        <label for="colorpicker">Color :</label>
+        <input id="colorpicker" type="color" value="#000000" title="Pick your color">
+        <button type="button" id="refresh-button">Refresh</button>
+    </div>
+
+</body>

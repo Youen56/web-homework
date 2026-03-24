@@ -1,0 +1,36 @@
+body {
+  width: 800px;
+  margin: auto;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.centered {
+    display:flex;
+    justify-content: space-evenly;
+}
+
+#num {
+    border: 1px solid blue;
+    padding: 8px 20px;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 10px 0;
+}
+
+#xkcd {
+    padding: 10px 0;
+}
+
+h1, h2 {
+    margin-top: 1rem;
+    padding-top: 1em;
+        font-size: large;
+}
+
+h1 { border-top: 2px groove blue; }
+h2 { border-top: 1px dotted blue; }
+
+
+button {
+    font-size: 2em;
+}

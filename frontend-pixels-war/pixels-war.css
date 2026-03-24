@@ -1,0 +1,32 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#connect-dialog {
+    margin-top: 1em;
+    & > * {
+        margin: 1em 2em;
+        background-color: rgb(200, 240, 213);
+        padding: 10px 20px;
+        border-radius: 0.5em;
+    }
+    :first-child > input {
+        width: 40ex;
+    }
+
+}
+
+#grid {
+    display: grid;
+    /*TODO: yous js must set grid-template-columns to repeat(n, 1fr)
+      where n is the number of columns in the grid*/
+    /* 80% of the viewport width */
+    width: 80vw;
+    &>.pixel {
+        aspect-ratio: 1/1;
+    }
+    margin-bottom: 1rem;
+}

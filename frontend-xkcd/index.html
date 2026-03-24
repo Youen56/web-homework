@@ -1,0 +1,179 @@
+<html>
+
+<!-- DO NOT EDIT index.html !!
+    instead, edit either
+    src/umbrella.html
+    or
+    src/instructions.md -->
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="style.css">
+  <script src="code.js"></script>
+</head>
+
+<body>
+  <h1> a toy app with some networking</h1>
+
+  <p>the xkcd comics</p>
+
+  <br>
+  <hr>
+  <div class="centered">
+    <button id="previous">←</button>
+    <button id="reset">↺</button>
+    <button id="next">→</button>
+  </div>
+
+  <div id="xkcd" class="centered">
+    <img>
+  </div>
+
+  <span id=num>status area</span>
+
+  <hr>
+
+  <!-- DO NOT EDIT THE TEXT BELOW
+    it is preprocessed from the markdown file
+    src/instructions.md - edit that file instead ! -->
+
+  <h1>objectives</h1>
+
+<p>starting from this html page <code>index.html</code>, and specifically the dummy skeleton above, you will be building a small application for browsing the xkcd comics</p>
+
+<p>so you should obtain something a little bit like https://xkcd.com/, kind of...</p>
+
+<h1>step 0</h1>
+
+<p>use your browser to open in a separate page the URLs</p>
+
+<ul>
+<li><code>https://xkcd.now.sh/?comic=latest</code></li>
+<li><code>https://xkcd.now.sh/?comic=2584</code></li>
+<li><code>https://xkcd.now.sh/?comic=1</code></li>
+<li><code>https://xkcd.now.sh/?comic=0</code></li>
+</ul>
+
+<p>what does that content look like ?<br />
+what can be the meaning of <code>num</code> and <code>img</code> fields ?</p>
+
+<p><em>hint</em>: numbers are sequential</p>
+
+<h1>assignment</h1>
+
+<ul>
+<li>you will work your way by editing
+<ul>
+<li><code>index.html</code></li>
+<li><code>code.js</code></li>
+<li><code>style.css</code></li>
+</ul></li>
+<li>use the usual naming scheme, i.e.
+<ul>
+<li>variables and functions in <code>lowercase</code> or <code>lowerCamelCase</code></li>
+<li>class names, if any, in <code>UpperCamelCase</code></li>
+<li>global constants in <code>UPPERCASE</code></li>
+</ul></li>
+<li>as far as possible, your code should have the smallest possible footprint on
+the global namespace, i.e.
+<ul>
+<li>avoid declaring globals</li>
+<li>as far as possible, confine them into functions; this is to avoid any
+possible conflict with other applications</li>
+</ul></li>
+</ul>
+
+<h1>step 1</h1>
+
+<p>write a function <code>fetchIssue(num)</code> that</p>
+
+<ul>
+<li>fetches the URL<br />
+<code>https://xkcd.now.sh/?comic=</code><em><code>num</code></em></li>
+<li>decodes it contents</li>
+<li>displays the corresponding 'num' in the status area (and just that for now)</li>
+</ul>
+
+<h2>step 1b</h2>
+
+<p>check your work, by connecting the 'reset' button (↺) to <code>fetchIssue("latest")</code></p>
+
+<p>when else could/should we call this, to have the page start up more nicely ?</p>
+
+<p>note that the status area <strong>must display a number</strong> (as opposed to
+<code>latest</code>)</p>
+
+<h2>step 1c</h2>
+
+<p>enhance the function so that the corresponding comics gets displayed in the <code>&lt;img&gt;</code> tag</p>
+
+<h1>step 2</h1>
+
+<p>improve the display so that the image, as well as the status area, are centered
+in the page and do not overlap each other</p>
+
+<h1>step 3</h1>
+
+<p>so far we can only get the latest comic; now we want to be able to move back and
+forth using the 2 arrow buttons</p>
+
+<p>change your code so that the application behaves that way; a suggested path to this end:</p>
+
+<ul>
+<li>keep the current number in a state (a variable shared amongst all the
+functions)</li>
+<li>write <code>next()</code> and <code>previous()</code> functions and connect them to the buttons</li>
+<li>optionally, keep track of the latest number, and enable the 'next' button only
+when relevant</li>
+</ul>
+
+<h1>optional steps</h1>
+
+<p>can be done independantly (in no particular order)</p>
+
+<h2>option A</h2>
+
+<ul>
+<li>refactor your code so that it becomes reusable</li>
+</ul>
+
+<p>for example, you could write a class, that gets created from 5 css selectors, so
+that the gist of <code>code.js</code> becomes (for example)</p>
+
+<pre><code>new XkcdBrowser(
+    // how to find the 5 elements, from css selectors
+    "#xkcd&gt;img",
+    "#num",
+    "#previous",
+    "#reset",
+    "#next"
+).start()
+</code></pre>
+
+<ul>
+<li>this should let you add a second, independant, area in the page, that implements the same logic - possibly within a completely different layout</li>
+</ul>
+
+<h2>option B</h2>
+
+<ul>
+<li>keep track of the latest issue number, and disable the prev/next buttons when
+they will be ineffective</li>
+<li><em>hint:</em> this might lead you to change <code>fetchIssue</code> so that it returns the current <code>num</code> in addition to displaying it</li>
+</ul>
+
+<h2>option C</h2>
+
+<ul>
+<li>display the issue title, date, and alternative text, in addition to its number</li>
+<li>any other improvement that you find useful or interesting</li>
+</ul>
+
+<h2>option D</h2>
+
+<ul>
+<li>let the user go directly to a specific issue by typing the number in a searchbox</li>
+</ul>
+
+
+</body>
