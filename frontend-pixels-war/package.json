@@ -1,0 +1,24 @@
+{
+  "name": "frontend-pixels-war",
+  "version": "1.0.0",
+  "description": "Practical work assignment at Mines de Paris, UE22.",
+  "main": "pixels-war.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ue22-p25/frontend-pixels-war.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ue22-p25/frontend-pixels-war/issues"
+  },
+  "homepage": "https://github.com/ue22-p25/frontend-pixels-war#readme",
+  "dependencies": {
+    "vite": "^8.0.2"
+  }
+}

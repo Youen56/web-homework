@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WhatsApp Clone V2</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; }
+        
+        /* Sidebar */
+        #sidebar { width: 300px; background: #f0f2f5; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; background: #edeff1; font-weight: bold; }
+        #group-list { flex: 1; overflow-y: auto; }
+        .group-item { padding: 15px; border-bottom: 1px solid #e9edef; cursor: pointer; transition: 0.3s; }
+        .group-item:hover { background: #e9edef; }
+        .group-item.active { background: #d9dbdd; border-left: 5px solid #128C7E; }
+
+        /* Main Chat Area */
+        #chat-area { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; }
+        .chat-header { padding: 15px; background: #edeff1; font-weight: bold; border-bottom: 1px solid #ddd; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* Bulles de message */
+        .message { max-width: 70%; margin-bottom: 10px; padding: 10px; border-radius: 8px; position: relative; }
+        .message.mine { align-self: flex-end; background: #dcf8c6; }
+        .message.others { align-self: flex-start; background: white; }
+        .sender { font-size: 0.8em; font-weight: bold; color: #128C7E; display: block; }
+        .time { font-size: 0.7em; color: #999; float: right; margin-top: 5px; }
+
+        #input-area { padding: 15px; background: #f0f2f5; display: flex; }
+        #messageText { flex: 1; padding: 10px; border: none; border-radius: 20px; outline: none; }
+
+        /* Login overlay */
+        #login-overlay { position: fixed; inset: 0; background: white; z-index: 100; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div style="text-align: center;">
+            <h2>Bienvenue sur Youchat</h2>
+            <input type="text" id="phoneId" placeholder="Numéro de téléphone"><br><br>
+            <input type="text" id="firstName" placeholder="Prénom"><br><br>
+            <button onclick="login()">Se connecter</button>
+        </div>
+    </div>
+
+    <div id="sidebar">
+        <div class="sidebar-header">Mes Groupes <button onclick="promptNewGroup()" style="float:right">+</button></div>
+        <div id="group-list"></div>
+    </div>
+
+    <div id="chat-area">
+        <div class="chat-header" id="current-group-name">Sélectionnez un groupe</div>
+        <div id="messages"></div>
+        <form id="input-area" onsubmit="sendMessage(event)" style="visibility: hidden;">
+            <input type="text" id="messageText" placeholder="Tapez un message...">
+            <button type="submit">Envoyer</button>
+        </form>
+    </div>
+
+    <script>
+        let ws = null;
+        let currentUser = { phone: '', name: '' };
+        let currentGroupId = null;
+
+        async function login() {
+            currentUser.phone = document.getElementById("phoneId").value;
+            currentUser.name = document.getElementById("firstName").value;
+
+            if(!currentUser.phone || !currentUser.name) return alert("Champs requis");
+
+            // Créer l'utilisateur
+            await fetch('http://localhost:8000/users/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone_number: currentUser.phone, first_name: currentUser.name, last_name: "" })
+            });
+
+            document.getElementById("login-overlay").style.display = "none";
+            loadUserGroups();
+        }
+
+        async function loadUserGroups() {
+            const res = await fetch(`http://localhost:8000/users/${currentUser.phone}/groups`);
+            const groups = await res.json();
+            const listDiv = document.getElementById("group-list");
+            listDiv.innerHTML = "";
+            
+            groups.forEach(g => {
+                const div = document.createElement("div");
+                div.className = `group-item ${g.id === currentGroupId ? 'active' : ''}`;
+                div.innerText = g.name;
+                div.onclick = () => selectGroup(g.id, g.name);
+                listDiv.appendChild(div);
+            });
+        }
+
+        async function promptNewGroup() {
+            const id = prompt("ID du nouveau groupe :");
+            const name = prompt("Nom du groupe :");
+            if(!id || !name) return;
+
+            // 1. Créer le groupe
+            await fetch('http://localhost:8000/groups/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, name: name })
+            });
+
+            // 2. Rejoindre le groupe
+            await fetch(`http://localhost:8000/groups/${id}/join/${currentUser.phone}`, { method: 'POST' });
+
+            loadUserGroups();
+        }
+
+        async function selectGroup(groupId, groupName) {
+            if (ws) ws.close(); // Fermer l'ancienne connexion
+            currentGroupId = groupId;
+
+            document.getElementById("current-group-name").innerText = groupName;
+            document.getElementById("input-area").style.visibility = "visible";
+            document.getElementById("messages").innerHTML = ""; // Nettoyer l'écran
+
+            // Mettre à jour l'UI de la sidebar
+            loadUserGroups();
+
+            // Charger historique
+            const historyRes = await fetch(`http://localhost:8000/groups/${groupId}/messages`);
+            const history = await historyRes.json();
+            history.forEach(msg => displayMessage(msg));
+
+            // Nouveau WebSocket
+            ws = new WebSocket(`ws://localhost:8000/ws/chat/${groupId}/${currentUser.phone}`);
+            ws.onmessage = (e) => displayMessage(JSON.parse(e.data));
+        }
+
+        function displayMessage(data) {
+            const messagesDiv = document.getElementById('messages');
+            const isMine = data.sender.includes(currentUser.name);
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isMine ? 'mine' : 'others'}`;
+            msgDiv.innerHTML = `
+                <span class="sender">${data.sender}</span>
+                ${data.content}
+                <span class="time">${new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            `;
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById("messageText");
+            if(input.value && ws) {
+                ws.send(input.value);
+                input.value = "";
+            }
+        }
+    </script>
+</body>
+</html>
