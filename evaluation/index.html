@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>WhatsApp Clone V2</title>
+    <meta charset="UTF-8">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; }
         
@@ -27,7 +28,6 @@
 
         #input-area { padding: 15px; background: #f0f2f5; display: flex; }
         #messageText { flex: 1; padding: 10px; border: none; border-radius: 20px; outline: none; }
-
         /* Login overlay */
         #login-overlay { position: fixed; inset: 0; background: white; z-index: 100; display: flex; align-items: center; justify-content: center; }
     </style>
@@ -35,12 +35,16 @@
 <body>
 
     <div id="login-overlay">
-        <div style="text-align: center;">
-            <h2>Bienvenue sur Youchat</h2>
-            <input type="text" id="phoneId" placeholder="Numéro de téléphone"><br><br>
-            <input type="text" id="firstName" placeholder="Prénom"><br><br>
-            <button onclick="login()">Se connecter</button>
-        </div>
+    <div style="text-align: center; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <h2>Connexion</h2>
+        <input type="text" id="phoneId" placeholder="Numéro de téléphone (ID)" required><br><br>
+        <input type="text" id="firstName" placeholder="Prénom (Obligatoire)" required><br><br>
+        <input type="text" id="lastName" placeholder="Nom (Obligatoire)" required><br><br>
+        <input type="text" id="pseudo" placeholder="Pseudo (Optionnel)"><br><br>
+        <button onclick="login()" style="padding: 10px 20px; cursor: pointer; background: #128C7E; color: white; border: none; border-radius: 5px;">
+            Commencer à discuter
+        </button>
+    </div>
     </div>
 
     <div id="sidebar">
@@ -63,21 +67,34 @@
         let currentGroupId = null;
 
         async function login() {
-            currentUser.phone = document.getElementById("phoneId").value;
-            currentUser.name = document.getElementById("firstName").value;
+    const phone = document.getElementById("phoneId").value;
+    const first = document.getElementById("firstName").value;
+    const last = document.getElementById("lastName").value;
+    const pseudo = document.getElementById("pseudo").value;
 
-            if(!currentUser.phone || !currentUser.name) return alert("Champs requis");
+    // Validation des champs obligatoires
+    if(!phone || !first || !last) {
+        return alert("Le téléphone, le nom et le prénom sont obligatoires !");
+    }
 
-            // Créer l'utilisateur
-            await fetch('http://localhost:8000/users/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone_number: currentUser.phone, first_name: currentUser.name, last_name: "" })
-            });
+    currentUser.phone = phone;
+    // On garde le nom d'affichage en mémoire côté client aussi pour les tests "mine/others"
+    currentUser.name = pseudo.trim() !== "" ? pseudo : `${first} ${last}`;
 
-            document.getElementById("login-overlay").style.display = "none";
-            loadUserGroups();
-        }
+    await fetch('http://localhost:8000/users/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            phone_number: phone, 
+            first_name: first, 
+            last_name: last,
+            pseudo: pseudo 
+        })
+    });
+
+    document.getElementById("login-overlay").style.display = "none";
+    loadAllGroups(); // Ou loadUserGroups selon ta version
+}
 
         async function loadUserGroups() {
             const res = await fetch(`http://localhost:8000/users/${currentUser.phone}/groups`);

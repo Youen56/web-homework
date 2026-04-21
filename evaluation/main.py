@@ -13,19 +13,28 @@ def get_session():
     with Session(engine) as session:
         yield session
 
-# --- MODÈLES SQLMODEL ---
 class UserGroupLink(SQLModel, table=True):
     user_phone: Optional[str] = Field(default=None, foreign_key="user.phone_number", primary_key=True)
     group_id: Optional[str] = Field(default=None, foreign_key="group.id", primary_key=True)
 
+# --- Modifie le modèle User ---
 class User(SQLModel, table=True):
     phone_number: str = Field(primary_key=True, index=True)
-    first_name: str
-    last_name: str
+    first_name: str  # Obligatoire par défaut
+    last_name: str   # Obligatoire par défaut
+    pseudo: Optional[str] = Field(default=None) # Optionnel
     is_online: bool = Field(default=False)
     
     groups: List["Group"] = Relationship(back_populates="users", link_model=UserGroupLink)
     messages: List["Message"] = Relationship(back_populates="sender")
+
+# --- Fonction utilitaire pour le nom d'affichage ---
+def get_display_name(user: User) -> str:
+    if user.pseudo and user.pseudo.strip():
+        return user.pseudo
+    return f"{user.first_name} {user.last_name}"
+
+
 
 class Group(SQLModel, table=True):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
@@ -74,7 +83,7 @@ app = FastAPI(title="WhatsApp Clone API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En développement, on autorise tout le monde ("*")
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],  # Autorise les méthodes GET, POST, DELETE, etc.
     allow_headers=["*"],
@@ -113,7 +122,7 @@ def get_group_messages(group_id: str, session: Session = Depends(get_session)):
         "id": msg.id,
         "content": msg.content,
         "timestamp": msg.timestamp.isoformat(),
-        "sender": f"{msg.sender.first_name} {msg.sender.last_name}"
+        "sender": get_display_name(msg.sender) 
     } for msg in messages]
 
 @app.post("/groups/{group_id}/join/{phone_number}")
@@ -150,7 +159,7 @@ async def websocket_endpoint(websocket: WebSocket, group_id: str, phone_number: 
         if user:
             user.is_online = True
             session.commit()
-    
+  
     try:
         while True:
             data = await websocket.receive_text()
@@ -162,8 +171,10 @@ async def websocket_endpoint(websocket: WebSocket, group_id: str, phone_number: 
                 session.refresh(new_msg)
                 
                 sender = session.get(User, phone_number)
-                sender_name = f"{sender.first_name} {sender.last_name}" if sender else phone_number
-
+                if sender:
+                    sender_name = get_display_name(sender)
+                else:
+                    sender_name = phone_number 
             message_payload = {
                 "id": new_msg.id,
                 "content": new_msg.content,
