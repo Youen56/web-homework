@@ -1,0 +1,28 @@
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; }
+        
+        /* Sidebar */
+        #sidebar { width: 300px; background: #f0f2f5; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; background: #edeff1; font-weight: bold; }
+        #group-list { flex: 1; overflow-y: auto; }
+        .group-item { padding: 15px; border-bottom: 1px solid #e9edef; cursor: pointer; transition: 0.3s; }
+        .group-item:hover { background: #e9edef; }
+        .group-item.active { background: #d9dbdd; border-left: 5px solid #128C7E; }
+        .btn-join { background: #128C7E; color: white; border: none; border-radius: 3px; padding: 5px 8px; cursor: pointer; font-size: 0.8em; }
+        .btn-leave { background: transparent; color: #cc0000; border: none; font-weight: bold; cursor: pointer; font-size: 1.2em; padding: 0 5px; opacity: 0.5; transition: 0.2s; }
+        .btn-leave:hover { opacity: 1; color: red; }
+        /* Main Chat Area */
+        #chat-area { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; }
+        .chat-header { padding: 15px; background: #edeff1; font-weight: bold; border-bottom: 1px solid #ddd; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* Bulles de message */
+        .message { max-width: 70%; margin-bottom: 10px; padding: 10px; border-radius: 8px; position: relative; }
+        .message.mine { align-self: flex-end; background: #dcf8c6; }
+        .message.others { align-self: flex-start; background: white; }
+        .sender { font-size: 0.8em; font-weight: bold; color: #128C7E; display: block; }
+        .time { font-size: 0.7em; color: #999; float: right; margin-top: 5px; }
+
+        #input-area { padding: 15px; background: #f0f2f5; display: flex; }
+        #messageText { flex: 1; padding: 10px; border: none; border-radius: 20px; outline: none; }
+        /* Login overlay */
+        #login-overlay { position: fixed; inset: 0; background: white; z-index: 100; display: flex; align-items: center; justify-content: center; }
