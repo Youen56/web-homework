@@ -125,9 +125,16 @@ def get_group_messages(group_id: str, session: Session = Depends(get_session)):
         "sender": get_display_name(msg.sender) 
     } for msg in messages]
 
+@app.get("/groups/")
+def get_all_groups(session: Session = Depends(get_session)):
+    """Récupère tous les groupes existants sur le serveur."""
+    statement = select(Group)
+    groups = session.exec(statement).all()
+    return [{"id": g.id, "name": g.name} for g in groups]
+
 @app.post("/groups/{group_id}/join/{phone_number}")
 def join_group_officially(group_id: str, phone_number: str, session: Session = Depends(get_session)):
-    # On vérifie si le lien existe déjà
+    """Rejoint un groupe."""
     statement = select(UserGroupLink).where(
         UserGroupLink.group_id == group_id, 
         UserGroupLink.user_phone == phone_number
@@ -137,6 +144,20 @@ def join_group_officially(group_id: str, phone_number: str, session: Session = D
     if not existing_link:
         new_link = UserGroupLink(user_phone=phone_number, group_id=group_id)
         session.add(new_link)
+        session.commit()
+    return {"status": "success"}
+
+@app.delete("/groups/{group_id}/leave/{phone_number}")
+def leave_group(group_id: str, phone_number: str, session: Session = Depends(get_session)):
+    """Permet à un utilisateur de quitter un groupe."""
+    statement = select(UserGroupLink).where(
+        UserGroupLink.group_id == group_id, 
+        UserGroupLink.user_phone == phone_number
+    )
+    link = session.exec(statement).first()
+    
+    if link:
+        session.delete(link)
         session.commit()
     return {"status": "success"}
 

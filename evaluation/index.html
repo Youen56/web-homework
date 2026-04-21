@@ -13,7 +13,9 @@
         .group-item { padding: 15px; border-bottom: 1px solid #e9edef; cursor: pointer; transition: 0.3s; }
         .group-item:hover { background: #e9edef; }
         .group-item.active { background: #d9dbdd; border-left: 5px solid #128C7E; }
-
+        .btn-join { background: #128C7E; color: white; border: none; border-radius: 3px; padding: 5px 8px; cursor: pointer; font-size: 0.8em; }
+        .btn-leave { background: transparent; color: #cc0000; border: none; font-weight: bold; cursor: pointer; font-size: 1.2em; padding: 0 5px; opacity: 0.5; transition: 0.2s; }
+        .btn-leave:hover { opacity: 1; color: red; }
         /* Main Chat Area */
         #chat-area { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; }
         .chat-header { padding: 15px; background: #edeff1; font-weight: bold; border-bottom: 1px solid #ddd; }
@@ -96,19 +98,128 @@
     loadAllGroups(); // Ou loadUserGroups selon ta version
 }
 
-        async function loadUserGroups() {
-            const res = await fetch(`http://localhost:8000/users/${currentUser.phone}/groups`);
-            const groups = await res.json();
+        // N'oublie pas de changer l'appel dans ta fonction login() :
+        // Remplace loadUserGroups(); par loadGroupsUI(); à la fin de login()
+
+        async function loadGroupsUI() {
+            // 1. Récupérer TOUS les groupes du serveur
+            const resAll = await fetch('http://localhost:8000/groups/');
+            const allGroups = await resAll.json();
+
+            // 2. Récupérer MES groupes
+            const resMine = await fetch(`http://localhost:8000/users/${currentUser.phone}/groups`);
+            const myGroups = await resMine.json();
+            
+            // Créer une liste simple d'IDs pour vérifier facilement l'appartenance
+            const myGroupIds = myGroups.map(g => g.id);
+
             const listDiv = document.getElementById("group-list");
             listDiv.innerHTML = "";
             
-            groups.forEach(g => {
+            allGroups.forEach(g => {
+                const isMember = myGroupIds.includes(g.id);
+                const isActive = g.id === currentGroupId;
+
                 const div = document.createElement("div");
-                div.className = `group-item ${g.id === currentGroupId ? 'active' : ''}`;
-                div.innerText = g.name;
-                div.onclick = () => selectGroup(g.id, g.name);
+                div.className = `group-item ${isActive ? 'active' : ''}`;
+                div.style.display = "flex";
+                div.style.justifyContent = "space-between";
+                div.style.alignItems = "center";
+
+                // Si je ne suis pas membre, le texte est un peu grisé
+                const nameSpan = document.createElement("span");
+                nameSpan.innerText = g.name;
+                nameSpan.style.flex = "1";
+                nameSpan.style.opacity = isMember ? "1" : "0.5";
+                
+                // On ne peut cliquer pour ouvrir le chat QUE si on est membre
+                if (isMember) {
+                    nameSpan.style.cursor = "pointer";
+                    nameSpan.onclick = () => selectGroup(g.id, g.name);
+                }
+
+                // Le bouton d'action à droite (Rejoindre ou Quitter)
+                const actionBtn = document.createElement("button");
+                if (isMember) {
+                    actionBtn.innerText = "✖"; // Petite croix pour quitter
+                    actionBtn.className = "btn-leave";
+                    actionBtn.title = "Quitter le groupe";
+                    actionBtn.onclick = (e) => {
+                        e.stopPropagation(); // Évite de déclencher le clic sur le groupe
+                        leaveGroup(g.id);
+                    };
+                } else {
+                    actionBtn.innerText = "Rejoindre";
+                    actionBtn.className = "btn-join";
+                    actionBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        joinGroup(g.id);
+                    };
+                }
+
+                div.appendChild(nameSpan);
+                div.appendChild(actionBtn);
                 listDiv.appendChild(div);
             });
+        }
+
+        async function joinGroup(groupId) {
+            await fetch(`http://localhost:8000/groups/${groupId}/join/${currentUser.phone}`, { method: 'POST' });
+            loadGroupsUI(); // Rafraîchit la liste
+        }
+
+        async function leaveGroup(groupId) {
+            if(!confirm("Êtes-vous sûr de vouloir quitter ce groupe ?")) return;
+
+            await fetch(`http://localhost:8000/groups/${groupId}/leave/${currentUser.phone}`, { method: 'DELETE' });
+            
+            // Si on quitte le groupe actuellement ouvert, on nettoie la zone de chat
+            if (currentGroupId === groupId) {
+                if (ws) ws.close();
+                currentGroupId = null;
+                document.getElementById("current-group-name").innerText = "Sélectionnez un groupe";
+                document.getElementById("input-area").style.visibility = "hidden";
+                document.getElementById("messages").innerHTML = "";
+            }
+            
+            loadGroupsUI(); // Rafraîchit la liste
+        }
+
+        // --- Mise à jour de promptNewGroup pour utiliser la nouvelle interface ---
+        async function promptNewGroup() {
+            const name = prompt("Nom du nouveau salon public :");
+            if(!name) return;
+
+            const res = await fetch('http://localhost:8000/groups/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            });
+            const newGroup = await res.json();
+
+            // Le créateur rejoint automatiquement
+            await fetch(`http://localhost:8000/groups/${newGroup.id}/join/${currentUser.phone}`, { method: 'POST' });
+
+            await loadGroupsUI();
+            selectGroup(newGroup.id, newGroup.name);
+        }
+
+        async function selectGroup(groupId, groupName) {
+            if (ws) ws.close();
+            currentGroupId = groupId;
+
+            document.getElementById("current-group-name").innerText = groupName;
+            document.getElementById("input-area").style.visibility = "visible";
+            document.getElementById("messages").innerHTML = "";
+
+            loadGroupsUI(); // Met à jour la surbrillance active
+
+            const historyRes = await fetch(`http://localhost:8000/groups/${groupId}/messages`);
+            const history = await historyRes.json();
+            history.forEach(msg => displayMessage(msg));
+
+            ws = new WebSocket(`ws://localhost:8000/ws/chat/${groupId}/${currentUser.phone}`);
+            ws.onmessage = (e) => displayMessage(JSON.parse(e.data));
         }
 
         async function promptNewGroup() {
@@ -126,7 +237,7 @@
             // 2. Rejoindre le groupe
             await fetch(`http://localhost:8000/groups/${id}/join/${currentUser.phone}`, { method: 'POST' });
 
-            loadUserGroups();
+            loadGroupsUI();
         }
 
         async function selectGroup(groupId, groupName) {
@@ -138,7 +249,7 @@
             document.getElementById("messages").innerHTML = ""; // Nettoyer l'écran
 
             // Mettre à jour l'UI de la sidebar
-            loadUserGroups();
+            loadGroupsUI();
 
             // Charger historique
             const historyRes = await fetch(`http://localhost:8000/groups/${groupId}/messages`);
