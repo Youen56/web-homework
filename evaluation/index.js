@@ -14,7 +14,6 @@ let ws = null;
     }
 
     currentUser.phone = phone;
-    // On garde le nom d'affichage en mémoire côté client aussi pour les tests "mine/others"
     currentUser.name = pseudo.trim() !== "" ? pseudo : `${first} ${last}`;
 
     await fetch('http://localhost:8000/users/', {
@@ -77,7 +76,7 @@ let ws = null;
                     actionBtn.className = "btn-leave";
                     actionBtn.title = "Quitter le groupe";
                     actionBtn.onclick = (e) => {
-                        e.stopPropagation(); // Évite de déclencher le clic sur le groupe
+                        e.stopPropagation(); // Évite de déclencher le clic sur le groupe, pour être sur que l'on veuille bien quitter ce groupe
                         leaveGroup(g.id);
                     };
                 } else {
@@ -117,7 +116,6 @@ let ws = null;
             loadGroupsUI(); // Rafraîchit la liste
         }
 
-        // --- Mise à jour de promptNewGroup pour utiliser la nouvelle interface ---
         async function promptNewGroup() {
             const name = prompt("Nom du nouveau salon public :");
             if(!name) return;
@@ -159,36 +157,36 @@ let ws = null;
             const name = prompt("Nom du groupe :");
             if(!id || !name) return;
 
-            // 1. Créer le groupe
+            // Créer le groupe
             await fetch('http://localhost:8000/groups/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: id, name: name })
             });
 
-            // 2. Rejoindre le groupe
+            //Rejoindre le groupe
             await fetch(`http://localhost:8000/groups/${id}/join/${currentUser.phone}`, { method: 'POST' });
 
             loadGroupsUI();
         }
 
         async function selectGroup(groupId, groupName) {
-            if (ws) ws.close(); // Fermer l'ancienne connexion
+            if (ws) ws.close(); //Fermer l'ancienne connexion
             currentGroupId = groupId;
 
             document.getElementById("current-group-name").innerText = groupName;
             document.getElementById("input-area").style.visibility = "visible";
-            document.getElementById("messages").innerHTML = ""; // Nettoyer l'écran
+            document.getElementById("messages").innerHTML = ""; //Nettoyer l'écran
 
-            // Mettre à jour l'UI de la sidebar
+            //Mettre à jour l'UI de la sidebar
             loadGroupsUI();
 
-            // Charger historique
+            //Charger historique
             const historyRes = await fetch(`http://localhost:8000/groups/${groupId}/messages`);
             const history = await historyRes.json();
             history.forEach(msg => displayMessage(msg));
 
-            // Nouveau WebSocket
+            //Nouveau WebSocket
             ws = new WebSocket(`ws://localhost:8000/ws/chat/${groupId}/${currentUser.phone}`);
             ws.onmessage = (e) => displayMessage(JSON.parse(e.data));
         }

@@ -5,36 +5,36 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
 
-# --- BASE DE DONNÉES ---
+#on fait la base sqlite
 sqlite_url = "sqlite:///./whatsapp_clone.db"
 engine = create_engine(sqlite_url, echo=False)
 
 def get_session():
     with Session(engine) as session:
         yield session
-
+#on crée la table des user en SQL pour les identifier
 class UserGroupLink(SQLModel, table=True):
     user_phone: Optional[str] = Field(default=None, foreign_key="user.phone_number", primary_key=True)
     group_id: Optional[str] = Field(default=None, foreign_key="group.id", primary_key=True)
 
-# --- Modifie le modèle User ---
+#Classe générale pour récupérer les informations de l'user à l'inscription/ à la connexion
 class User(SQLModel, table=True):
     phone_number: str = Field(primary_key=True, index=True)
     first_name: str  # Obligatoire par défaut
     last_name: str   # Obligatoire par défaut
     pseudo: Optional[str] = Field(default=None) # Optionnel
-    is_online: bool = Field(default=False)
+    is_online: bool = Field(default=False)# Booléen pour savoir si on active websocket ou pas.
     
     groups: List["Group"] = Relationship(back_populates="users", link_model=UserGroupLink)
     messages: List["Message"] = Relationship(back_populates="sender")
 
-# --- Fonction utilitaire pour le nom d'affichage ---
+#si on ne rentre pas de pseudo, on a juste son nom et son prénom
 def get_display_name(user: User) -> str:
     if user.pseudo and user.pseudo.strip():
         return user.pseudo
     return f"{user.first_name} {user.last_name}"
 
-
+#on fait des class pour les différents objets: les messages et les groupes
 
 class Group(SQLModel, table=True):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
@@ -46,7 +46,7 @@ class Group(SQLModel, table=True):
 class Message(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     content: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))#on date les messages avec datetime à la place d'un str (possible aussi mais moins propre)
     
     sender_phone: str = Field(foreign_key="user.phone_number")
     group_id: str = Field(foreign_key="group.id", index=True)
@@ -54,7 +54,7 @@ class Message(SQLModel, table=True):
     sender: User = Relationship(back_populates="messages")
     group: Group = Relationship(back_populates="messages")
 
-# --- BROADCASTER WEBSOCKET ---
+#Activation de la websocket
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, List[WebSocket]] = {}
@@ -78,7 +78,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-# --- APP FASTAPI ---
+#FastAPI
 app = FastAPI(title="WhatsApp Clone API")
 
 app.add_middleware(
@@ -93,7 +93,7 @@ app.add_middleware(
 def on_startup():
     SQLModel.metadata.create_all(engine)
 
-# --- ROUTES REST ---
+#On fait les différentes routes pour les messages
 @app.post("/users/")
 def create_user(user: User, session: Session = Depends(get_session)):
     db_user = session.get(User, user.phone_number)
@@ -126,6 +126,7 @@ def get_group_messages(group_id: str, session: Session = Depends(get_session)):
     } for msg in messages]
 
 @app.get("/groups/")
+#création d'une fonction qui permet de rafraichir les créations de groupe et donc de les voir en permanence
 def get_all_groups(session: Session = Depends(get_session)):
     """Récupère tous les groupes existants sur le serveur."""
     statement = select(Group)
@@ -148,6 +149,7 @@ def join_group_officially(group_id: str, phone_number: str, session: Session = D
     return {"status": "success"}
 
 @app.delete("/groups/{group_id}/leave/{phone_number}")
+#fonction pour quitter un groupe en cliquant sur la croix, et son nom est donc effacé des listes de diffusions.
 def leave_group(group_id: str, phone_number: str, session: Session = Depends(get_session)):
     """Permet à un utilisateur de quitter un groupe."""
     statement = select(UserGroupLink).where(
@@ -170,7 +172,7 @@ def get_user_groups(phone_number: str, session: Session = Depends(get_session)):
     return [{"id": g.id, "name": g.name} for g in user.groups]
 
 
-# --- ROUTE WEBSOCKET ---
+#Websocket
 @app.websocket("/ws/chat/{group_id}/{phone_number}")
 async def websocket_endpoint(websocket: WebSocket, group_id: str, phone_number: str):
     await manager.connect(websocket, group_id)
